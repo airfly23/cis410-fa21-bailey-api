@@ -1,5 +1,7 @@
 const express = require("express");
 
+const db = require("./dbConnectExec.js");
+
 //create an app. The () run the main express function which will run the function
 const app = express();
 
@@ -21,3 +23,20 @@ app.get("/", (req, res) => {
 
 // app.post();
 // app.put();
+
+app.get("/movies", (req, res) => {
+  //get data from the database
+  db.executeQuery(
+    `SELECT *
+  FROM movie
+  LEFT JOIN Genre
+  ON genre.GenrePK = movie.GenreFK`
+  )
+    .then((theResults) => {
+      res.status(200).send(theResults);
+    })
+    .catch((myError) => {
+      console.log(myError);
+      res.status(500).send();
+    });
+});
