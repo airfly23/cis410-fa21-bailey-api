@@ -1,3 +1,4 @@
+const { response } = require("express");
 const express = require("express");
 
 const db = require("./dbConnectExec.js");
@@ -37,6 +38,31 @@ app.get("/movies", (req, res) => {
     })
     .catch((myError) => {
       console.log(myError);
+      res.status(500).send();
+    });
+});
+
+//Create endpoint for PK
+app.get("/movies/:pk", (req, res) => {
+  let pk = req.params.pk;
+  // console.log(pk);
+  let myQuery = `SELECT *
+  FROM movie
+  LEFT JOIN Genre
+  ON genre.GenrePK = movie.GenreFK
+  WHERE moviepk = ${pk}`;
+
+  db.executeQuery(myQuery)
+    .then((result) => {
+      //console.log("result", result);
+      if (result[0]) {
+        response.send(result[0]);
+      } else {
+        res.status(404).send(`bad request`);
+      }
+    })
+    .catch((err) => {
+      console.log("Error in /movie/:pk", err);
       res.status(500).send();
     });
 });
