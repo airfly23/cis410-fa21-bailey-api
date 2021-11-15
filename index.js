@@ -2,8 +2,10 @@ const { response } = require("express");
 
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const db = require("./dbConnectExec.js");
+const rockwellConfig = require("./config.js");
 
 //create an app. The () run the main express function which will run the function
 const app = express();
@@ -29,6 +31,75 @@ app.get("/", (req, res) => {
 
 // app.post();
 // app.put();
+
+app.post("/GymMember/login", async (req, res) => {
+  // console.log("/GymMember/login called", req.body);
+
+  //1. Data validation
+  let email = req.body.email;
+  let password = req.body.password;
+
+  if (!email || !password) {
+    return res.status(400).send("Bad request");
+  }
+
+  //2. Check that the user exists in db
+  let query = `SELECT * 
+  FROM [Gym Member]
+  WHERE Email = '${email}'`;
+
+  //Below code fixes the invalid object name error
+  //TRY IT OUT FOR OTHER SECTIONS OF Gym Member and Gym1
+  let result;
+
+  try {
+    result = await db.executeQuery(query);
+  } catch (myError) {
+    console.log("/error in /Gym Member/login", myError);
+    return res.status(500).send();
+  }
+  //console.log("result", result);
+
+  if (!result[0]) {
+    return res.status(401).send("Invalid user credentials");
+  }
+
+  //3. Check password
+  let user = result[0];
+
+  if (!bcrypt.compareSync(password, user.Password)) {
+    console.log("invalid password");
+    return res.status(401).send("Invalid user credentials");
+  }
+
+  //4. Generate token
+  let token = jwt.sign({ pk: user.MemberID }, rockwellConfig.JWT, {
+    expiresIn: "60 minutes",
+  });
+  console.log("token", token);
+
+  //5. save token in db and send response
+  let setTokenQuery = `UPDATE [Gym Member]
+  SET Token = '${token}'
+  WHERE MemberID = ${user.MemerID}`;
+
+  try {
+    await db.executeQuery(setTokenQuery);
+
+    res.status(200).send({
+      token: token,
+      user: {
+        NameLast: user.nameLast,
+        NameFirst: user.nameFirst,
+        Email: user.email,
+        MemberID: user.MemberID,
+      },
+    });
+  } catch (myError) {
+    console.log("error in setting user token", myError);
+    res.status(500).send();
+  }
+});
 
 //Create endpoint for signing up
 app.post("/GymMember", async (req, res) => {
