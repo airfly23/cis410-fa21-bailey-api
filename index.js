@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 
 const db = require("./dbConnectExec.js");
 const rockwellConfig = require("./config.js");
+const auth = require("./middleware/authenticate");
 
 //create an app. The () run the main express function which will run the function
 const app = express();
@@ -31,6 +32,26 @@ app.get("/", (req, res) => {
 
 // app.post();
 // app.put();
+
+app.post("/Payment", auth, async (req, res) => {
+  try {
+    let paymentID = req.body.PaymentID;
+    let amount = req.body.Amount;
+    let date = req.body.Date;
+    let method = req.body.Method;
+
+    if (!!paymentID || amount || date || method) {
+      return res.status(400).send("bad request");
+
+      //Summary from lecture is not needed.
+      //summary - summary.replace("'", "''");
+      //console.log("summary", summary);
+    }
+  } catch (err) {
+    console.log("error in post /payments", err);
+    res.status(500).send();
+  }
+});
 
 app.post("/GymMember/login", async (req, res) => {
   // console.log("/GymMember/login called", req.body);
