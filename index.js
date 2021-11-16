@@ -102,7 +102,7 @@ app.post("/GymMember/login", async (req, res) => {
   //5. save token in db and send response
   let setTokenQuery = `UPDATE [Gym Member]
   SET Token = '${token}'
-  WHERE MemberID = ${user.MemerID}`;
+  WHERE MemberID = ${user.MemberID}`;
 
   try {
     await db.executeQuery(setTokenQuery);
