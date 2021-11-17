@@ -1,4 +1,4 @@
-const { response } = require("express");
+//const { response } = require("express");
 
 const express = require("express");
 const bcrypt = require("bcryptjs");
@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 
 const db = require("./dbConnectExec.js");
 const rockwellConfig = require("./config.js");
-const auth = require("./middleware/authenticate");
+const auth = require("./middleware/authenticate.js");
 
 //create an app. The () run the main express function which will run the function
 const app = express();
@@ -40,17 +40,36 @@ app.post("/Payment", auth, async (req, res) => {
     let date = req.body.Date;
     let method = req.body.Method;
 
-    if (!!paymentID || amount || date || method) {
+    //Date must be in this format: "2021-01-10"
+    if (!paymentID || !amount || !date || !method) {
       return res.status(400).send("bad request");
-
-      //Summary from lecture is not needed.
-      //summary - summary.replace("'", "''");
-      //console.log("summary", summary);
     }
+
+    //Summary from lecture is not needed.
+    //summary = summary.replace("'", "''");
+    //console.log("summary", summary);
+
+    //Code is unreachable???
+    //console.log("here is the gym member", req.gymMember);
+
+    let insertQuery = `INSERT INTO Payment(Amount, Date, Method, MemberIDFK, GymIDFK)
+      OUTPUT inserted.PaymentID, inserted.Amount, inserted.Date, inserted.Method, inserted.MemberIDFK, inserted.GymIDFK
+      VALUES(${amount}, '${date}', '${method}', ${GymID}, ${req.gymMemberPK})`;
+
+    let insertedPayment = await db.executeQuery(insertQuery);
+    //console.log("inserted payment".insertedPayment);
+
+    //res.send("here is the response");
+    res.status(201).send(insertedPayment[0]);
   } catch (err) {
-    console.log("error in post /payments", err);
+    console.log("error in post /Payment", err);
     res.status(500).send();
   }
+});
+
+//Crate /me endpoint
+app.get("/GymMember/me", auth, (req, res) => {
+  res.send(req.gymMember);
 });
 
 app.post("/GymMember/login", async (req, res) => {
@@ -66,7 +85,7 @@ app.post("/GymMember/login", async (req, res) => {
 
   //2. Check that the user exists in db
   let query = `SELECT * 
-  FROM [Gym Member]
+  FROM Gym Member
   WHERE Email = '${email}'`;
 
   //Below code fixes the invalid object name error
@@ -100,7 +119,7 @@ app.post("/GymMember/login", async (req, res) => {
   console.log("token", token);
 
   //5. save token in db and send response
-  let setTokenQuery = `UPDATE [Gym Member]
+  let setTokenQuery = `UPDATE Gym Member
   SET Token = '${token}'
   WHERE MemberID = ${user.MemberID}`;
 
@@ -197,6 +216,32 @@ app.get("/gym", (req, res) => {
     })
     .catch((myError) => {
       console.log(myError);
+      res.status(500).send();
+    });
+});
+
+app.get("/gym/:GymID", (req, res) => {
+  let pk = req.params.GymID;
+  //console.log(pk);
+
+  //call database
+  let myQuery = `SELECT *
+  FROM Gym1
+  LEFT JOIN Class
+  ON class.ClassID = Gym1.ClassIDFK
+  WHERE GymID = ${pk}`;
+
+  db.executeQuery(myQuery)
+    .then((result) => {
+      //console.log("result", result);
+      if (result[0]) {
+        res.send(result[0]);
+      } else {
+        res.status(404).send(`bad request`);
+      }
+    })
+    .catch((err) => {
+      console.log("Error in /gym/:GymID", err);
       res.status(500).send();
     });
 });
