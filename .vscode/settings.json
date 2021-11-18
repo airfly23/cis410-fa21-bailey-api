@@ -1,0 +1,4 @@
+{
+  "appService.defaultWebAppToDeploy": "/subscriptions/94a3ebc4-9251-4d7f-aeea-b0516ffe4dba/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/cis410-fa21-bailey-api",
+  "appService.deploySubpath": "."
+}

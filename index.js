@@ -1,5 +1,5 @@
 //const { response } = require("express");
-
+const cors = require("cors");
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -14,9 +14,14 @@ const app = express();
 //Tell app to recognize incoming request as JSON data
 app.use(express.json());
 
+//azurewebsites.net, colostate.edu
+app.use(cors());
+
 //Below is function with 2 arguments. 1st is the port number we want to listen to. 2nd is function to use once app is running on that port
-app.listen(5000, () => {
-  console.log(`app is running on port 5000`);
+//Was 5,000. Changed to new port variable
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`app is running on port ${PORT}`);
 });
 
 //Below is a get function. Takes 2 arguments. 1st the route path (or end point). 2nd is fnction.
@@ -49,7 +54,7 @@ app.post("/Payment", auth, async (req, res) => {
     //summary = summary.replace("'", "''");
     //console.log("summary", summary);
 
-    //Code is unreachable???
+    //Code is unreachable??? Code is reachable now. Had to fix semi-colon
     //console.log("here is the gym member", req.gymMember);
 
     let insertQuery = `INSERT INTO Payment(Amount, Date, Method, MemberIDFK, GymIDFK)
@@ -85,7 +90,7 @@ app.post("/GymMember/login", async (req, res) => {
 
   //2. Check that the user exists in db
   let query = `SELECT * 
-  FROM Gym Member
+  FROM GymMember
   WHERE Email = '${email}'`;
 
   //Below code fixes the invalid object name error
@@ -95,7 +100,7 @@ app.post("/GymMember/login", async (req, res) => {
   try {
     result = await db.executeQuery(query);
   } catch (myError) {
-    console.log("/error in /Gym Member/login", myError);
+    console.log("/error in /GymMember/login", myError);
     return res.status(500).send();
   }
   //console.log("result", result);
@@ -119,7 +124,7 @@ app.post("/GymMember/login", async (req, res) => {
   console.log("token", token);
 
   //5. save token in db and send response
-  let setTokenQuery = `UPDATE Gym Member
+  let setTokenQuery = `UPDATE GymMember
   SET Token = '${token}'
   WHERE MemberID = ${user.MemberID}`;
 
@@ -176,7 +181,7 @@ app.post("/GymMember", async (req, res) => {
   nameFirst = nameFirst.replace("'", "''");
 
   let emailCheckQuery = `SELECT Email
-  FROM Gym Member
+  FROM GymMember
   WHERE Email = '${email}'`;
 
   let existingUser = await db.executeQuery(emailCheckQuery);
@@ -190,7 +195,7 @@ app.post("/GymMember", async (req, res) => {
   let hashedPassword = bcrypt.hashSync(password);
 
   //Register information
-  let insertQuery = `INSERT INTO [Gym Member](NameLast, NameFirst, Email, PhoneNumber, AddressNumber, City, State, Zip, Password)
+  let insertQuery = `INSERT INTO GymMember(NameLast, NameFirst, Email, PhoneNumber, AddressNumber, City, State, Zip, Password)
   VALUES('${nameLast}', '${nameFirst}', '${email}', '${phoneNumber}', '${addressNumber}', '${city}', '${state}', '${zip}', '${hashedPassword}')`;
 
   db.executeQuery(insertQuery)
@@ -198,7 +203,7 @@ app.post("/GymMember", async (req, res) => {
       res.status(201).send();
     })
     .catch((err) => {
-      console.log("error in POST /Gym Member", err);
+      console.log("error in POST /GymMember", err);
       res.status(500).send();
     });
 });
@@ -207,9 +212,9 @@ app.get("/gym", (req, res) => {
   //get data from the database
   db.executeQuery(
     `SELECT *
-    FROM Gym1
+    FROM Gym2
     LEFT JOIN Class
-    ON class.ClassID = Gym1.ClassIDFK`
+    ON class.ClassID = Gym2.ClassIDFK`
   )
     .then((theResults) => {
       res.status(200).send(theResults);
@@ -226,7 +231,7 @@ app.get("/gym/:GymID", (req, res) => {
 
   //call database
   let myQuery = `SELECT *
-  FROM Gym1
+  FROM Gym2
   LEFT JOIN Class
   ON class.ClassID = Gym1.ClassIDFK
   WHERE GymID = ${pk}`;

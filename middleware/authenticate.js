@@ -19,7 +19,7 @@ const auth = async (req, res, next) => {
 
     //2. compare token with db
     let query = `SELECT MemberID, NameLast, NameFirst, Email
-    FROM [Gym Member]
+    FROM GymMember
     WHERE MemberID=${gymMemberPK} and token='${myToken}'`;
 
     let returnedUser = await db.executeQuery(query);
