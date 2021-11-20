@@ -43,12 +43,14 @@ app.get("/Payment/me", auth, async (req, res) => {
   let gymMemberPK = req.gymMember.gymMemberPK;
 
   //query database for user records
+  db.executeQuery();
   let thisQuery = `SELECT *
-  FROM GymMember
-  WHERE MemberID = ${gymMemberPK}`;
-
+  FROM GymMember, Payment
+  WHERE MemberID = ${gymMemberPK}, ${PaymentID}
+  LEFT JOIN Payment 
+  ON payment.PaymentID = GymMember.MemberIDFK`;
   //send user's payments back to them
-  res.send(req.gymMember);
+  req.send(thisQuery);
 });
 
 app.post("/GymMember/logout", auth, (req, res) => {
