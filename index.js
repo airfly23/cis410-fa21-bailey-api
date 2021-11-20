@@ -38,6 +38,34 @@ app.get("/", (req, res) => {
 // app.post();
 // app.put();
 
+app.get("/Payment/me", auth, async (req, res) => {
+  //Get GymMember PK
+  let gymMemberPK = req.gymMember.gymMemberPK;
+
+  //query database for user records
+  let thisQuery = `SELECT *
+  FROM GymMember
+  WHERE MemberID = ${gymMemberPK}`;
+
+  //send user's payments back to them
+  res.send(req.gymMember);
+});
+
+app.post("/GymMember/logout", auth, (req, res) => {
+  let query = `UPDATE GymMember
+  SET token = null
+  WHERE MemberID = ${req.gymMember.gymMemberPK}`;
+
+  db.executeQuery(query)
+    .then(() => {
+      res.status(200).send;
+    })
+    .catch((err) => {
+      console.log("error in POST /GymMemer/logout", err);
+      res.status(500).send();
+    });
+});
+
 app.post("/Payment", auth, async (req, res) => {
   try {
     let paymentID = req.body.PaymentID;

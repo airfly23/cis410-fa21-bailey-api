@@ -5,7 +5,7 @@ const config = {
   user: rockwellConfig.DB.user,
   password: rockwellConfig.DB.password,
   server: rockwellConfig.DB.server, // You can use 'localhost\\instance' to connect to named instance
-  database: rockwellConfig.database,
+  database: rockwellConfig.DB.database,
 };
 
 async function executeQuery(aQuery) {
